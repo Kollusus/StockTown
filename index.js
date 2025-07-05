@@ -49,17 +49,35 @@ async function main() {
     console.log("map", map);
 
     const layer = map.layers[0];
-    const tiles = layer.tiles;
-    const map2D = [];
+    const groundTiles = layer.tiles;
+    const decalTiles = map.layers[1].tiles;
+    const ground2D = [];
+    const decals2D = [];
+    
     for(let row = 0; row < map.height; row++) {
-        const tileRow = [];
+        const groundRow = [];
+        const decalRow = [];
         for(let col = 0; col < map.width; col++) {
-            const tile = tiles[row * map.height + col];
-              tileRow.push({id: tile.id, gid: tile.gid});
+            const groundTile = groundTiles[row * map.height + col];
+              groundRow.push({
+                id: groundTile.id, 
+                gid: groundTile.gid,
+              });
+            const decalTile = decalTiles[row * map.height + col];
+            if (decalTile) {
+              decalRow.push({
+                id: decalTile.id,
+                gid: decalTile.gid,
+              });  
+            }else {
+              decalRow.push(undefined);
+            }
+              
         }
-        map2D.push(tileRow);
+        ground2D.push(groundRow);
+        decals2D.push(decalRow);
     }
-    console.log("map2D", map2D);
+
 
     io.on("connect", (socket) => {
         console.log("user connected", socket.id);
@@ -77,7 +95,10 @@ async function main() {
             y: 0,
         });
 
-        socket.emit("map", map2D);
+        socket.emit("map", {
+            ground: ground2D,
+            decals: decals2D,
+        });
 
         socket.on("inputs", (inputs) => {
             inputsMap[socket.id] = inputs;
@@ -85,7 +106,7 @@ async function main() {
 
         socket.on("chat", (msg) => {
             io.emit('chat', { from: socket.id, text: msg});
-        });
+        });    
     });
 
     app.use(express.static("public"));
