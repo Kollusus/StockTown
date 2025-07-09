@@ -14,20 +14,34 @@ let map = null;
 
 const SPEED = 5;
 const TICK_RATE = 30;
+const TILE_SIZE = 16;
 
 function tick() {
     for (const player of players) {
         const inputs = inputsMap[player.id];
+        const previousY = player.y;
+        const previousX = player.x;
+
         if (inputs.up) {
             player.y -= SPEED;
         } else if (inputs.down) {
             player.y += SPEED;
         }
 
+        if (isCollidingMap(player)) {
+            player.y = previousY;
+        }
+
         if (inputs.left) {
             player.x -= SPEED;
+            player.dir = "left";
         } else if (inputs.right) {
             player.x += SPEED;
+            player.dir = "right";
+        }
+
+        if (isCollidingMap(player)) {
+            player.x = previousX;
         }
     }
 
@@ -36,8 +50,50 @@ function tick() {
 
 const players = [];
 const inputsMap = {};
+const ground2D = [];
+const decals2D = [];
+
+function isColliding(rect1, rect2) {
+  return (
+    rect1.x < rect2.x + rect2.w &&
+    rect1.x + rect1.w > rect2.x &&
+    rect1.y < rect2.y + rect2.h &&
+    rect1.h + rect1.y > rect2.y
+  );
+}
+
+function isCollidingMap(player) {
+    for (let row = 0; row < decals2D.length; row++){
+        for(let col = 0; col < decals2D[0].length; col++){
+            const tile = decals2D[row][col];
+
+            if (
+                tile &&
+                isColliding(
+                    {
+                        x: player.x,
+                        y: player.y,
+                        w: 48,
+                        h: 64,
+                    },
+                    {
+                        x: col * TILE_SIZE,
+                        y: row * TILE_SIZE,
+                        w: TILE_SIZE,
+                        h: TILE_SIZE,
+                    }
+                )
+            ) {
+                return true;
+            }
+           
+        }
+    }
+    return false;
+}
 
 async function main() {
+    //mapLoader.js
     const map = await new Promise((resolve, reject) => {
             tmx.parseFile("./src/map.tmx", function(err, loadedMap) {
             if (err) return reject(err);
@@ -51,8 +107,7 @@ async function main() {
     const layer = map.layers[0];
     const groundTiles = layer.tiles;
     const decalTiles = map.layers[1].tiles;
-    const ground2D = [];
-    const decals2D = [];
+    
     
     for(let row = 0; row < map.height; row++) {
         const groundRow = [];
@@ -93,6 +148,7 @@ async function main() {
             id: socket.id,
             x: 0,
             y: 0,
+            dir: 'right'
         });
 
         socket.emit("map", {

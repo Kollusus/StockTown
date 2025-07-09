@@ -2,7 +2,10 @@ const mapImage = new Image();
 mapImage.src = '/Stock.png';
 
 const PlayerImage = new Image();
-PlayerImage.src = '/kk.png';
+PlayerImage.src = '/walk_left_down.png';
+
+const PlayerRightImage = new Image();
+PlayerRightImage.src = '/walk_right_down.png';
 
 const canvasEl = document.getElementById("canvas");
 canvasEl.width = window.innerWidth;
@@ -94,6 +97,14 @@ socket.on('chat', (msg) => {
   addMessage(msg.text, msg.from);
 });
 
+const frameWidth = 48;
+const frameHeight = 64;
+const totalFrames = 8;
+const animationSpeed = 120; // ms ต่อ frame
+
+let animationFrame = 0;
+let lastFrameTime = 8;
+
 function loop() {
     canvas.clearRect(0, 0, canvasEl.width, canvasEl.height);
 
@@ -151,11 +162,31 @@ function loop() {
             );
         }
     }
+
+    const now = Date.now();
+    if (now - lastFrameTime > animationSpeed) {
+        animationFrame = (animationFrame + 1) % totalFrames;
+        lastFrameTime = now;
+    }
     
     for (const player of players) {
-        canvas.drawImage(PlayerImage, player.x - cameraX, player.y - cameraY);
+
+        const isRight = player.dir === "right"; // สมมุติ server ส่งค่าทิศทางมาใน player.dir
+        const img = isRight ? PlayerRightImage : PlayerImage;
+
+        const isMoving = player.id === socket.id &&
+            (inputs.up || inputs.down || inputs.left || inputs.right);
+
+        const frame = isMoving ? animationFrame : 0;
+
+        canvas.drawImage(
+            img,
+            frame * frameWidth, 0,
+            frameWidth, frameHeight,
+            player.x - cameraX, player.y - cameraY,
+            frameWidth, frameHeight
+        );
     }
-    //canvas.drawImage(PlayerImage,0,0);
 
     window.requestAnimationFrame(loop);
 }
