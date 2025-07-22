@@ -72,6 +72,8 @@
 
     
     <canvas id="canvas"></canvas>
+
+    <button onclick="toggleEditMode()">🛠️ Edit Mode</button>
     
     <div id="chat-container">
         <div id="chat-log"></div>
@@ -80,6 +82,16 @@
 
     <script src="/socket.io/socket.io.js"></script> 
     <script type="module" src="/index.js"></script> 
+
+    <script>
+        const token = localStorage.getItem("token");
+        if (!token) {
+        window.location.href = "/login";
+        }
+    </script>
+
+    
+    
     
 </body>
 </html>

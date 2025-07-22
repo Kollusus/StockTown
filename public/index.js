@@ -16,7 +16,13 @@ const canvas = canvasEl.getContext("2d");
 const chatInput = document.getElementById('chat-input');
 const chatLog = document.getElementById('chat-log');
 
-const socket = io(`ws://localhost:5000`);
+
+
+const socket = io(`ws://localhost:5000`, {
+  auth: {
+    token: localStorage.getItem("token")
+  }
+});
 
 let groundMap = [[]];
 let decalMap = [[]];
@@ -35,7 +41,7 @@ socket.on("map", (loadedMap) => {
 
 socket.on('players', (serverPlayers) => {
     players = serverPlayers;
-    console.log("test", serverPlayers);
+    //console.log("test", serverPlayers);
 })
 
 const inputs = {
@@ -73,6 +79,17 @@ window.addEventListener("keyup", (e) => {
   
   socket.emit("inputs", inputs);
 });
+
+let mouseX = 0;
+let mouseY = 0;
+
+canvasEl.addEventListener("mousemove", (e) => {
+  mouseX = e.clientX;
+  mouseY = e.clientY;
+  console.log("Location {$} , {$}", mouseX, mouseY);
+
+});
+
 
 function addMessage(text, from = "You") {
   const msg = document.createElement('div');
